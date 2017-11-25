@@ -49,12 +49,10 @@ I have commented out the copy command but if you want copy command and password 
 Hak5 is not responsible for the execution of 3rd party binaries. Therefore I am not allowed to include it in github. You can easily download the binary from here or compile yourself https://github.com/AlessandroZ/LaZagne
 When compiled or downloaded, just drop it of to the PasswordGrabbers folder and you are good to go!
 
-## STATUS
+Supported software
 
-| LED                | Status                                       |
-| ------------------ | -------------------------------------------- |
-| Red                | Attack Setup                                 |
-| Green              | Attack Complete                              |
+The LaZagne project
+https://github.com/AlessandroZ/LaZagne/blob/master/pictures/softwares.png
+(*) used by many tools to store passwords: Chrome, Owncloud, Evolution, KMail, etc.
 
-## Discussion
-[Hak5 Forum Thread] https://forums.hak5.org/index.php?/topic/40437-payload-passwordgrabber/
+
