@@ -1,7 +1,8 @@
 # JackGrabbit
 Mass Windows credential stealer payload for the BashBunny
+TL;DR - Windows credential stealer for a TON of different accounts including slack, filezilla, windows passwords (local, cahced, and domain accounts if applicable), terminal server sessions, outlook,  many different browser's stored PWs, SSH keys and other authentication certificates, WiFi profile passwords (encrypted and plain-text), many many more, etc.
 
-# Credit goes to illwill (fist and foremost) / Hak5Darren / RazerBlade /
+# Credit goes to illwill (first and foremost) / Hak5Darren / RazerBlade /
 # This is a mix payload that will be expanded upon, so I am not removing the original Author's description; but not everything written inthe description is done by the payload. Many items will be borught in and merely commented out until they are ready for primetime.
 # Title:         JackRabbit
 # Author:        illwill
